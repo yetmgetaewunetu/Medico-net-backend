@@ -1,8 +1,8 @@
-const Pharmacist = require('../models/Pharmacist');
-const LabTechnician = require('../models/LabTechnician');
-const triage = require('../models/Triage');
-const doctor = require('../models/Doctor');
-const Patient = require('../models/Patient');
+const Pharmacist = require('../models/Pharmacist.js');
+const LabTechnician = require('../models/LabTechnician.js');
+const triage = require('../models/Triage.js');
+const doctor = require('../models/Doctor.js');
+const Patient = require('../models/Patient.js');
 const HospitalAdministrator = require('../models/HospitalAdministrator.js');
 const Hospital = require('../models/Hospital.js');
 
@@ -27,10 +27,10 @@ const registerHospital = async (req,res) => {
         });
 
         const savedHospital = await hospital.save();
-        return savedHospital;
+        res.status(201).json({hospital});
     } catch (error) {
         console.error('Error registering hospital:', error);
-        throw error;
+        res.status(501).json({msg: "internal server error"})
     }
 };
 
@@ -75,4 +75,4 @@ const viewAllRecords = async (req,res) =>{
 
 
 
-module.exports = {deleteHospital, registerHospital};
+module.exports = {deleteHospital, registerHospital,viewAllRecords};
