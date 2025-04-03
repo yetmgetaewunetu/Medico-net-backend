@@ -11,32 +11,55 @@ const addStaffAccount = async (req, res) => {
     try {
         const { role, firstName, lastName, dateOfBirth, gender, password, contactNumber, address, hospitalID } = req.body;
 
+        // Ensure role is provided
+        if (!role) {
+            return res.status(400).json({ message: "Role is required." });
+        }
+
+        const lowerCaseRole = role.toLowerCase();
+
         const RoleModels = {
-            doctor: Doctor,
-            labtechnician: LabTechnician,
-            pharmacist: Pharmacist,
-            receptionist: Receptionist,
-            triage: Triage
+            "doctor": Doctor,
+            "labtechnician": LabTechnician,
+            "pharmacist": Pharmacist,
+            "receptionist": Receptionist,
+            "triage": Triage
         };
 
-        if (!RoleModels[role.toLowerCase()]) {
+        // Check if the role exists in RoleModels
+        if (!RoleModels[lowerCaseRole]) {
             return res.status(400).json({ message: "Invalid role provided." });
         }
 
-        const staff = new RoleModels[role.toLowerCase()]({
-            firstName, lastName, dateOfBirth, gender, password, contactNumber, address, hospitalID, role
+        // Create an instance of the role-specific model
+        const StaffModel = RoleModels[lowerCaseRole];
+        const staff = new StaffModel({
+            firstName,
+            lastName,
+            dateOfBirth,
+            gender,
+            password,
+            contactNumber,
+            address,
+            hospitalID,
+            role
         });
 
+        // Save the new staff member
         await staff.save();
         res.status(201).json({ message: "Staff account created successfully", staff });
 
     } catch (error) {
+        console.error("Error in addStaffAccount:", error);
         res.status(500).json({ message: "Error creating staff account", error: error.message });
     }
 };
 
 
+
 const deleteStaffAccount = async (req, res) => {
+    
+    console.log("hi")
     try {
         const { staffId } = req.params;
         const deletedUser = await User.findByIdAndDelete(staffId);
