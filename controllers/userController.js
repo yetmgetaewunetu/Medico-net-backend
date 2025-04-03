@@ -7,6 +7,7 @@ const generateToken = require("../lib/utils");
 const login = async (req, res) => {
   try {
     const { email, password, role } = req.body;
+    console.log("🚀 ~ login ~ body:", body)
 
     const user = await User.findOne({ email });
 
