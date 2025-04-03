@@ -1,6 +1,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 
 const hospitalAdminRoutes = require("./routes/hospitalAdminRoutes");
 const triageRoutes = require("./routes/triageRoutes");
@@ -25,6 +26,7 @@ app.use(
     origin: "http://localhost:5173/",
   })
 );
+app.use(cookieParser());
 
 app.use("/hospitalStaff", hospitalAdminRoutes);
 app.use("/systemAdmin", systemAdminRoutes);

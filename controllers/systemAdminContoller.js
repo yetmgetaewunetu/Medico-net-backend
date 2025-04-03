@@ -10,7 +10,7 @@ const Hospital = require("../models/Hospital.js");
 
 const registerHospital = async (req, res) => {
   try {
-    const { role } = req.user.role;
+    const { role } = req.user;
     if (role != "Admin") {
       return res.status(404).json({
         msg: "only admins can add a hospital",
@@ -44,7 +44,7 @@ const registerHospital = async (req, res) => {
 
 const deleteHospital = async (req, res) => {
   try {
-    const { role } = req.user.role;
+    const { role } = req.user;
     if (role != "Admin" || !role) {
       return res.status(404).json({
         msg: "only admins can add a hospital",
@@ -79,12 +79,11 @@ const deleteHospital = async (req, res) => {
 
 const viewAllRecords = async (req, res) => {
   try {
-    console.log(req.user);
+    const { role } = req.user;
 
-    const { role } = req.user.role;
     if (role != "Admin" || !role) {
       return res.status(404).json({
-        msg: "only admins can add a hospital",
+        msg: "only admins can view all records",
       });
     }
 
@@ -99,7 +98,8 @@ const viewAllRecords = async (req, res) => {
 
 const addHospitalAdmin = async (req, res) => {
   try {
-    const { role } = req.user.role;
+    const { role } = req.user;
+
     if (role != "Admin" || !role) {
       return res.status(404).json({
         msg: "only admins can add a hospital",

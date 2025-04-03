@@ -6,9 +6,9 @@ const generateToken = require("../lib/utils");
 
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
-    const user = await User.find({ email });
+    const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(404).json({ msg: "user doesn't exist" });
@@ -16,7 +16,7 @@ const login = async (req, res) => {
 
     const isUser = await bcrypt.compare(password, user.password);
 
-    if (!isUser) {
+    if (!isUser || user.role != role) {
       return res.status(404).json({ msg: "invalid credentials" });
     }
 
