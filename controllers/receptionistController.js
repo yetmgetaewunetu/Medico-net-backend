@@ -2,7 +2,6 @@ const Patient = require("../models/Patient");
 
 const registerPatient = async (req, res) => {
   try {
-    console.log(req.body);
     const {
       faydaID,
       firstName,

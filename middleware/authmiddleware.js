@@ -1,10 +1,8 @@
-import jwt from "jsonwebtoken";
-import User from "../models/user.model.js";
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 
-export default async (req, res, next) => {
-
+const authMiddleware = async (req, res, next) => {
   try {
-
     const token = req.cookies.jwt;
 
     if (!token) {
@@ -25,10 +23,10 @@ export default async (req, res, next) => {
 
     req.user = user;
     next();
-
   } catch (error) {
-
     console.log("Error in protect route", error.message);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+module.exports = authMiddleware;

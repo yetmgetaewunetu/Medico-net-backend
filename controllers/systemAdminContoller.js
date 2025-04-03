@@ -1,78 +1,157 @@
-const Pharmacist = require('../models/Pharmacist.js');
-const LabTechnician = require('../models/LabTechnician.js');
-const triage = require('../models/Triage.js');
-const doctor = require('../models/Doctor.js');
-const Patient = require('../models/Patient.js');
-const HospitalAdministrator = require('../models/HospitalAdministrator.js');
-const Hospital = require('../models/Hospital.js');
+const bcrypt = require("bcrypt");
 
-const registerHospital = async (req,res) => {
-    try {
+const Pharmacist = require("../models/Pharmacist.js");
+const LabTechnician = require("../models/LabTechnician.js");
+const triage = require("../models/Triage.js");
+const doctor = require("../models/Doctor.js");
+const Patient = require("../models/Patient.js");
+const HospitalAdministrator = require("../models/HospitalAdministrator.js");
+const Hospital = require("../models/Hospital.js");
 
-        // Check if hospital with same license number already exists
-        const hospitalData = req.body;
-
-
-        const existingHospital = await Hospital.findOne({ licenseNumber: hospitalData.licenseNumber });
-        if (existingHospital) {
-            throw new Error('Hospital with this license number already exists');
-        }
-
-        const hospital = new Hospital({
-            name: hospitalData.name,
-            location: hospitalData.location,
-            contactNumber: hospitalData.contactNumber,
-            licenseImage: hospitalData.licenseImage,
-            licenseNumber: hospitalData.licenseNumber
-        });
-
-        const savedHospital = await hospital.save();
-        res.status(201).json({hospital});
-    } catch (error) {
-        console.error('Error registering hospital:', error);
-        res.status(501).json({msg: "internal server error"})
+const registerHospital = async (req, res) => {
+  try {
+    const { role } = req.user.role;
+    if (role != "Admin") {
+      return res.status(404).json({
+        msg: "only admins can add a hospital",
+      });
     }
+
+    const hospitalData = req.body;
+
+    const existingHospital = await Hospital.findOne({
+      licenseNumber: hospitalData.licenseNumber,
+    });
+    if (existingHospital) {
+      throw new Error("Hospital with this license number already exists");
+    }
+
+    const hospital = new Hospital({
+      name: hospitalData.name,
+      location: hospitalData.location,
+      contactNumber: hospitalData.contactNumber,
+      licenseImage: hospitalData.licenseImage,
+      licenseNumber: hospitalData.licenseNumber,
+    });
+
+    const savedHospital = await hospital.save();
+    res.status(201).json({ hospital });
+  } catch (error) {
+    console.error("Error registering hospital:", error);
+    res.status(501).json({ msg: "internal server error" });
+  }
 };
 
-const deleteHospital = async (req,res) => {
-    try {
-        const {hospitalId} = req.body
-
-        if (!mongoose.Types.ObjectId.isValid(hospitalId)) {
-            throw new Error('Invalid hospital ID format');
-        }
-
-        const deletedHospital = await Hospital.findByIdAndDelete(hospitalId);
-        
-        if (!deletedHospital) {
-            throw new Error('Hospital not found');
-        }
-
-        await HospitalAdministrator.deleteMany({hospitalId});
-        await doctor.deleteMany({hospitalId});
-        await Pharmacist.deleteMany({hospitalId});
-        await LabTechnician.deleteMany({hospitalId});
-        await triage.deleteMany({hospitalId});
-
-        return deletedHospital;
-
-    } catch (error) {
-        console.error('Error deleting hospital:', error);
-        throw error;
+const deleteHospital = async (req, res) => {
+  try {
+    const { role } = req.user.role;
+    if (role != "Admin" || !role) {
+      return res.status(404).json({
+        msg: "only admins can add a hospital",
+      });
     }
+
+    const { hospitalId } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(hospitalId)) {
+      throw new Error("Invalid hospital ID format");
+    }
+
+    const deletedHospital = await Hospital.findByIdAndDelete(hospitalId);
+
+    if (!deletedHospital) {
+      throw new Error("Hospital not found");
+    }
+
+    await HospitalAdministrator.deleteMany({ hospitalId });
+    await doctor.deleteMany({ hospitalId });
+    await Pharmacist.deleteMany({ hospitalId });
+    await LabTechnician.deleteMany({ hospitalId });
+    await triage.deleteMany({ hospitalId });
+
+    return deletedHospital;
+  } catch (error) {
+    console.error("Error deleting hospital:", error);
+    throw error;
+    res.status(500).json({ msg: "internal server error" });
+  }
 };
 
-const viewAllRecords = async (req,res) =>{
-    try {
-        const data = await Patient.find({});
+const viewAllRecords = async (req, res) => {
+  try {
+    console.log(req.user);
 
-        res.status(200).json({data})
-
-    } catch (error) {
-        console.log("Error at VIEW ALL RECORDS(SYSTEM ADMIN.JS", error.js);
+    const { role } = req.user.role;
+    if (role != "Admin" || !role) {
+      return res.status(404).json({
+        msg: "only admins can add a hospital",
+      });
     }
-}
 
+    const data = await Patient.find({});
 
+    res.status(200).json({ data });
+  } catch (error) {
+    console.log("Error at VIEW ALL RECORDS(SYSTEM ADMIN.JS", error.message);
+    res.status(500).json({ msg: "internal server error" });
+  }
+};
 
-module.exports = {deleteHospital, registerHospital,viewAllRecords};
+const addHospitalAdmin = async (req, res) => {
+  try {
+    const { role } = req.user.role;
+    if (role != "Admin" || !role) {
+      return res.status(404).json({
+        msg: "only admins can add a hospital",
+      });
+    }
+
+    const userData = req.body;
+    const {
+      email,
+      passowrd,
+      hospitalId,
+      firstName,
+      lastName,
+      dateOfBirth,
+      gender,
+    } = userData;
+    if (
+      !email ||
+      !passowrd ||
+      !hospitalId ||
+      !firstName ||
+      !lastName ||
+      !dateOfBirth ||
+      !gender
+    ) {
+      return res.status(404).json({ msg: "Please fill all the inputs." });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    userData.password = await bcrypt.hash(userData.password, salt);
+
+    const newHospitalAdmin = new HospitalAdministrator({
+      userData,
+    });
+
+    await newHospitalAdmin.save();
+
+    res.status(200).json({
+      msg: "you are now a hospital admin",
+    });
+  } catch (error) {
+    console.log(
+      "error at add hospital admin: systemAdminController",
+      error.message
+    );
+    res.status(500).json({ msg: "internal server error" });
+  }
+};
+
+module.exports = {
+  deleteHospital,
+  registerHospital,
+  viewAllRecords,
+  addHospitalAdmin,
+};
