@@ -25,6 +25,7 @@ const userSchema = new Schema(
   },
   { discriminatorKey: "role" }
 );
+userSchema.index({ email: 1, role: 1 }, { unique: true });
 
 const User = mongoose.model("User", userSchema);
 module.exports = User;

@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
 const Pharmacist = require("../models/Pharmacist.js");
@@ -7,6 +8,7 @@ const doctor = require("../models/Doctor.js");
 const Patient = require("../models/Patient.js");
 const HospitalAdministrator = require("../models/HospitalAdministrator.js");
 const Hospital = require("../models/Hospital.js");
+const User = require("../models/User.js");
 
 const registerHospital = async (req, res) => {
   try {
@@ -60,7 +62,7 @@ const deleteHospital = async (req, res) => {
     const deletedHospital = await Hospital.findByIdAndDelete(hospitalId);
 
     if (!deletedHospital) {
-      throw new Error("Hospital not found");
+      return res.status(404).json({ msg: "Hospital not found" });
     }
 
     await HospitalAdministrator.deleteMany({ hospitalId });
@@ -69,7 +71,7 @@ const deleteHospital = async (req, res) => {
     await LabTechnician.deleteMany({ hospitalId });
     await triage.deleteMany({ hospitalId });
 
-    return deletedHospital;
+    res.status(201).json({ deletedHospital });
   } catch (error) {
     console.error("Error deleting hospital:", error);
     throw error;
@@ -109,8 +111,8 @@ const addHospitalAdmin = async (req, res) => {
     const userData = req.body;
     const {
       email,
-      passowrd,
-      hospitalId,
+      password,
+      hospitalID,
       firstName,
       lastName,
       dateOfBirth,
@@ -118,22 +120,27 @@ const addHospitalAdmin = async (req, res) => {
     } = userData;
     if (
       !email ||
-      !passowrd ||
-      !hospitalId ||
+      !password ||
+      !hospitalID ||
       !firstName ||
       !lastName ||
       !dateOfBirth ||
       !gender
     ) {
-      return res.status(404).json({ msg: "Please fill all the inputs." });
+      return res.status(400).json({ msg: "Please fill all the inputs." });
+    }
+
+    const existingUser = await User.findOne({ email });
+
+    if (existingUser) {
+      return res.status(400).json({ msg: "user already exists" });
     }
 
     const salt = await bcrypt.genSalt(10);
     userData.password = await bcrypt.hash(userData.password, salt);
 
-    const newHospitalAdmin = new HospitalAdministrator({
-      userData,
-    });
+    console.log(userData);
+    const newHospitalAdmin = new HospitalAdministrator(userData);
 
     await newHospitalAdmin.save();
 

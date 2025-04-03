@@ -11,13 +11,15 @@ const login = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(404).json({ msg: "user doesn't exist" });
+      return res.status(400).json({ msg: "user doesn't exist" });
     }
 
     const isUser = await bcrypt.compare(password, user.password);
 
+    console.log(isUser, user.role, role, password);
+
     if (!isUser || user.role != role) {
-      return res.status(404).json({ msg: "invalid credentials" });
+      return res.status(400).json({ msg: "invalid credentials" });
     }
 
     generateToken(user._id, user.hospitalId, user.role, res);
