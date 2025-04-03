@@ -1,11 +1,11 @@
 const User = require('./User');
 const mongoose = require('mongoose');
 
-const triageSchema = new mongoose.Schema({
+const labTechnicianSchema = new mongoose.Schema({
     hospitalID: { type: mongoose.Schema.Types.ObjectId, ref: 'Hospital', required: true },
     contactNumber: { type: String, required: true },
     address: { type: String, required: true }
 });
 
-const Triage = User.discriminator('Triage', triageSchema);
-module.exports = Triage;
+const LabTechnician = User.discriminator('LabTechnician', labTechnicianSchema);
+module.exports = LabTechnician;
