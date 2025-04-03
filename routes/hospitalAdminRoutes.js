@@ -3,8 +3,8 @@ const router = express.Router();
 const { addStaffAccount, deleteStaffAccount, viewPatientsByHospital } = require('../controllers/hospitalAdminController');
 
 
-router.post('/staff/add', addStaffAccount);
 
+router.post('/staff/add', addStaffAccount);
 router.delete('/staff/:staffId', deleteStaffAccount);
 
 

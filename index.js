@@ -2,14 +2,18 @@ const express = require('express');
 const dotenv = require('dotenv')
 const cors = require('cors')
 const hospitalAdminRoutes = require('./routes/hospitalAdminRoutes')
-const hospotalAdminRoutes = require('./routes/hospitalAdminRoutes')
-const connectDB = require('./lib/db')
+const triageRoutes = require('./routes/triageRoutes')
+const labRoutes = require('./routes/labReqeustRoutes')
+const prescriptionRoutes = require('./routes/prescriptionRoutes')
+
+const connectDB = require('./lib/db');
 
 
 dotenv.config();
 const port = process.env.PORT
 
 const app = express();
+
 app.use(express.json())
 app.use(cors({
     credentials:true,
@@ -18,7 +22,10 @@ app.use(cors({
 
 
 
-app.use("/hospitalStaff",hospitalAdminRoutes)
+app.use("/hospitalStaff", hospitalAdminRoutes);
+app.use("/triage",triageRoutes );
+app.use("/lab", labRoutes);
+app.use("/prescription", prescriptionRoutes);
 
 
 app.listen(port, ()=>{
