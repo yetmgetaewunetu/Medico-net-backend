@@ -2,6 +2,9 @@ const express = require('express');
 const dotenv = require('dotenv')
 const cors = require('cors')
 const hospotalAdminRoutes = require('./routes/hospitalAdminRoutes')
+const connectDB = require('./lib/db')
+
+
 dotenv.config();
 
 const app = express();
@@ -15,6 +18,8 @@ app.use(cors({
 }))
 
 
+
 app.listen(port, ()=>{
     console.log(`Server listening on port ${port}`)
+    connectDB();
 })

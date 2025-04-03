@@ -1,9 +1,9 @@
-const Hospital = require('../models/hospital.js');
-const Pharmacist = require('../models/pharmacist.js');
-const LabTechnician = require('../models/LabTechnician.js');
-const triage = require('../models/triage.js');
-const doctor = require('../models/doctor.js');
-const Patient = require('../models/patient.js');
+const Hospital = require('../models/Hospital.js');
+const Pharmacist = require('../models/Pharmacist');
+const LabTechnician = require('../models/LabTechnician');
+const triage = require('../models/Triage');
+const doctor = require('../models/Doctor');
+const Patient = require('../models/Patient');
 const HospitalAdministrator = require('../models/HospitalAdministrator.js');
 
 const registerHospital = async (req,res) => {
