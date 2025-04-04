@@ -1,5 +1,7 @@
 const MedicalRecord = require("../models/MedicalRecord");
 const Patient = require("../models/Patient");
+const Prescription = require("../models/Prescription");
+const LabRequest = require("../models/LabRequest");
 
 const viewAssignedRecord = async (req, res) => {
   try {
@@ -9,7 +11,7 @@ const viewAssignedRecord = async (req, res) => {
       return res.status(400).json({ msg: "Doctor ID is required" });
     }
 
-    const data = await MedicalRecord.find({ faydaId });
+    const data = await MedicalRecord.find({ faydaID: faydaId });
 
     if (!data || data.length === 0) {
       return res
@@ -17,9 +19,28 @@ const viewAssignedRecord = async (req, res) => {
         .json({ msg: "No medical records found for this doctor" });
     }
 
+    // Process each medical record to populate prescriptions
+    const processedData = await Promise.all(
+      data.map(async (record) => {
+        const prescriptions = await Promise.all(
+          record.prescriptions.map(async (prescriptionId) => {
+            const prescription = await Prescription.findOne({
+              _id: prescriptionId,
+            });
+            return prescription ? prescription.medicineList : null;
+          })
+        );
+
+        return {
+          ...record.toObject(), // Convert Mongoose document to plain object
+          prescriptions: prescriptions.filter((p) => p !== null), // Filter out null prescriptions
+        };
+      })
+    );
+
     res.status(200).json({
       msg: "Medical records retrieved successfully",
-      data,
+      data: processedData,
     });
   } catch (error) {
     console.log(
@@ -32,7 +53,12 @@ const viewAssignedRecord = async (req, res) => {
 
 const sendLabRequest = async (req, res) => {
   try {
-    const { patientID, doctorID, testType, status } = req.body;
+    const { _id: doctorID, role } = req.user;
+    const { patientID, testType, status } = req.body;
+
+    if (role != "Doctor") {
+      return res.status(400).json({ msg: "Only doctors can send lab request" });
+    }
 
     if (!patientID || !doctorID || !testType) {
       return res.status(400).json({
@@ -64,27 +90,41 @@ const sendLabRequest = async (req, res) => {
 
 const uploadRecord = async (req, res) => {
   try {
-    const { faydaId, patientID, diagnosis, prescription } = req.params;
-    const { doctorId } = req.user;
-    const dateRecorded = new Date.now();
+    const { _id: doctorID } = req.user;
 
-    if (!faydaId || !patientId || !diagnosis) {
+    const dateRecorded = Date.now();
+    const {
+      faydaID,
+      patientID,
+      diagnosis,
+      prescriptions,
+      generalMeasurements,
+    } = req.body;
+
+    console.log(prescriptions);
+
+    // console.log(faydaID, patientID, doctorID);
+
+    if (!faydaID || !patientID || !diagnosis) {
       return res.status(400).json({
         message: "Record ID is required",
       });
     }
 
-    const updatedRecord = await MedicalRecord.insert({
-      faydaId,
-      patientId,
+    const newMedicalRecord = new MedicalRecord({
+      faydaID,
+      patientID,
       diagnosis,
-      prescirption,
+      prescriptions,
       dateRecorded,
-      doctorId,
+      doctorID,
+      generalMeasurements,
     });
 
+    await newMedicalRecord.save();
+
     res.status(200).json({
-      data,
+      newMedicalRecord,
     });
   } catch (error) {
     console.error(
@@ -100,7 +140,14 @@ const uploadRecord = async (req, res) => {
 
 const sendPrescription = async (req, res) => {
   try {
-    const { patientID, doctorID, medicineList } = req.body;
+    const { role, _id: doctorID } = req.user;
+    const { patientID, medicineList } = req.body;
+
+    if (role != "Doctor") {
+      return res
+        .status(400)
+        .json({ msg: "you have to be a doctor to send prescription!" });
+    }
 
     if (!patientID || !doctorID) {
       return res.status(400).json({
@@ -137,4 +184,11 @@ const sendPrescription = async (req, res) => {
       msg: "Internal server error",
     });
   }
+};
+
+module.exports = {
+  sendLabRequest,
+  sendPrescription,
+  uploadRecord,
+  viewAssignedRecord,
 };

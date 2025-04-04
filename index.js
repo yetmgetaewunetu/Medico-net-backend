@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 
 const hospitalAdminRoutes = require("./routes/hospitalAdminRoutes");
 const triageRoutes = require("./routes/triageRoutes");
+const doctorRoutes = require("./routes/doctorRoutes");
 const labRoutes = require("./routes/labReqeustRoutes");
 const prescriptionRoutes = require("./routes/prescriptionRoutes");
 const systemAdminRoutes = require("./routes/systemAdminRoutes");
@@ -20,18 +21,21 @@ const port = process.env.PORT;
 const app = express();
 
 app.use(express.json());
-app.use(cors({
-  origin: 'http://localhost:5173', // Your frontend origin
-  credentials: true, // Allow credentials (cookies, authorization headers)
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Your frontend origin
+    credentials: true, // Allow credentials (cookies, authorization headers)
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use(cookieParser());
 
 app.use("/hospitalStaff", hospitalAdminRoutes);
 app.use("/systemAdmin", systemAdminRoutes);
 app.use("/reception", receptionistRoutes);
 app.use("/triage", triageRoutes);
+app.use("/doctor", doctorRoutes);
 app.use("/lab", labRoutes);
 app.use("/prescription", prescriptionRoutes);
 app.use("/auth", authRoute);
