@@ -20,13 +20,12 @@ const port = process.env.PORT;
 const app = express();
 
 app.use(express.json());
-app.use(
-  cors({
-    credentials: true,
-    origin: "http://localhost:5173/",
-    
-  })
-);
+app.use(cors({
+  origin: 'http://localhost:5173', // Your frontend origin
+  credentials: true, // Allow credentials (cookies, authorization headers)
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(cookieParser());
 
 app.use("/hospitalStaff", hospitalAdminRoutes);
