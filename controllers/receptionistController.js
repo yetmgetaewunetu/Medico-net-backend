@@ -2,6 +2,14 @@ const Patient = require("../models/Patient");
 
 const registerPatient = async (req, res) => {
   try {
+    const { role: staffRole, hospitalID } = req.user;
+
+    if (!staffRole || staffRole != "Receptionist") {
+      return res
+        .status(400)
+        .json({ msg: "only receptionist can add patients" });
+    }
+
     const {
       faydaID,
       firstName,
@@ -14,7 +22,7 @@ const registerPatient = async (req, res) => {
       medicalHistory,
       registeredHospital,
     } = req.body;
-
+    // console.log(req.body);
     if (
       !faydaID ||
       !firstName ||
@@ -32,13 +40,13 @@ const registerPatient = async (req, res) => {
       faydaID,
       firstName,
       lastName,
-      dateOfBirth: new Date(dateOfBirth),
+      dateOfBirth,
       gender,
       contactNumber,
       address,
       emergencyContact,
-      medicalHistory: medicalHistory || "",
-      registeredHospital: registeredHospital || null,
+      medicalHistory: medicalHistory,
+      registeredHospital: registeredHospital || hospitalID,
     });
 
     await newPatient.save();
