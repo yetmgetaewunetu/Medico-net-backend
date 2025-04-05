@@ -1,41 +1,63 @@
 const bcrypt = require("bcrypt");
-
-const { default: authmiddleware } = require("../middleware/authmiddleware");
 const User = require("../models/User");
 const generateToken = require("../lib/utils");
 
 const login = async (req, res) => {
   try {
+    
     const { email, password, role } = req.body;
-    console.log("🚀 ~ login ~ body:", body)
-
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(400).json({ msg: "user doesn't exist" });
+    
+    // Validate input
+    if (!email || !password || !role) {
+      return res.status(400).json({ 
+        success: false,
+        msg: "Please provide email, password, and role" 
+      });
     }
 
-    const isUser = await bcrypt.compare(password, user.password);
+    const user = await User.findOne({ email });
+      
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        msg: "User not found. Please check your email or register." 
+      });
+    }
+    
 
-    console.log(isUser, user.role, role, password);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
-    if (!isUser || user.role != role) {
-      return res.status(400).json({ msg: "invalid credentials" });
+    if (!isPasswordValid) {
+      return res.status(401).json({ 
+        success: false,
+        msg: "Invalid password. Please try again." 
+      });
+    }
+    
+
+    if (user.role.toUpperCase != role.toUpperCase) {
+      return res.status(403).json({ 
+        success: false,
+        msg: `Access denied. This account is not registered as a ${role}.` 
+      });
     }
 
     generateToken(user._id, user.hospitalId, user.role, res);
 
     res.status(200).json({
+      success: true,
       userId: user._id,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
       gender: user.gender,
+      role: user.role
     });
   } catch (error) {
-    console.log("error in login", error.message);
+    console.error("Login error:", error);
     res.status(500).json({
-      msg: "Internal server error",
+      success: false,
+      msg: "Internal server error. Please try again later."
     });
   }
 };
