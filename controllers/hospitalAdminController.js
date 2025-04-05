@@ -5,6 +5,7 @@ const Pharmacist = require("../models/Pharmacist");
 const Receptionist = require("../models/Receptionist");
 const Triage = require("../models/Triage");
 const Patient = require("../models/Patient");
+const bcrypt = require("bcrypt");
 
 const addStaffAccount = async (req, res) => {
   try {
@@ -49,6 +50,9 @@ const addStaffAccount = async (req, res) => {
       return res.status(400).json({ message: "Invalid role provided." });
     }
 
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
     // Create an instance of the role-specific model
     const StaffModel = RoleModels[lowerCaseRole];
     const staff = new StaffModel({
@@ -56,7 +60,7 @@ const addStaffAccount = async (req, res) => {
       lastName,
       dateOfBirth,
       gender,
-      password,
+      password: hashedPassword,
       contactNumber,
       address,
       hospitalID,
@@ -107,13 +111,14 @@ const viewPatientsByHospital = async (req, res) => {
     const { role: staffRole } = req.user;
 
     if (!staffRole || staffRole != "HospitalAdministrator") {
-      return res
-        .status(400)
-        .json({ message: "Only hospital admins can add staff member" });
+      return res.status(400).json({
+        message: "Only hospital admins can view patients list by hospital id",
+      });
     }
 
     const { hospitalID } = req.params;
-    const patients = await Patient.find({ hospitalID });
+    // console.log(hospitalID);
+    const patients = await Patient.find({ registeredHospital: hospitalID });
 
     if (!patients.length) {
       return res
