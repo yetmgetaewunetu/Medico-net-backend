@@ -32,7 +32,7 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
-app.use("/hospitalStaff", hospitalAdminRoutes);
+app.use("/hospitalAdmin", hospitalAdminRoutes);
 app.use("/systemAdmin", systemAdminRoutes);
 app.use("/reception", receptionistRoutes);
 app.use("/triage", triageRoutes);
